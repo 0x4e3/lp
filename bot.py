@@ -9,10 +9,10 @@ TELEGRAM_API_TOKEN = '374823991:AAEpegnagW8yHNzDC1J52wR1DJ4A2fBcoxE'
 
 
 def greet_user(bot, update):
-    user_info = update.message.to_dict().get('from', {})
+    user_info = update.message.from_user
     if user_info:
-        greeting = "Hi, {first_name} {last_name}! Let's chat together!". \
-            format(**user_info)
+        greeting = "Hi, {} {}! Let's chat together!". \
+            format(user_info.first_name, user_info.last_name)
     else:
         greeting = 'Давай общаться!'
     bot.sendMessage(update.message.chat_id, text=greeting)
