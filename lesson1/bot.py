@@ -1,6 +1,7 @@
 # coding=utf-8
 import sys
 from datetime import date
+from functools import wraps
 
 import enchant
 import ephem
@@ -9,6 +10,18 @@ from telegram.error import InvalidToken
 
 
 TELEGRAM_API_TOKEN = '374823991:AAEpegnagW8yHNzDC1J52wR1DJ4A2fBcoxE'
+
+# TODO: Add logging
+def send_reply_to_user(func):
+    @wraps(func)
+    def wraper(bot, update, args):
+        reply_text = func(bot, update, args)
+        if not reply_text and not isinstance(reply_text, str):
+            print('Your handler "{}" should return some text.'.
+                format(func.__name__))
+            reply_text = 'Ой, у нас там что-то пошло как-то не так.'
+        bot.sendMessage(update.message.chat_id, text=reply_text)
+    return wraper
 
 
 def greet_user(bot, update):
@@ -21,28 +34,24 @@ def greet_user(bot, update):
     bot.sendMessage(update.message.chat_id, text=greeting)
 
 
+@send_reply_to_user
 def find_planet(bot, update, args):
-    try:
-        planet_name = args[0]
-    except IndexError:
-        bot.sendMessage(update.message.chat_id,
-                        text='Хорошо бы указать название планеты!')
+    if not args:
+        return 'Хорошо бы указать название планеты!'
+    planet_name = args[0]
     planet_name = planet_name.capitalize()
     dictionary = enchant.Dict('en_US')
     if not dictionary.check(planet_name):
-        bot.sendMessage(update.message.chat_id,
-                        text='Название планеты должно быть на английском!')
-    try:
+        return 'Название планеты должно быть на английском!'
+    planets_available = [line[2] for line in ephem._libastro.builtin_planets()]
+    if planet_name in planets_available:
         planet = getattr(ephem, planet_name)
-    except AttributeError:
-        bot.sendMessage(update.message.chat_id,
-                        text='Ничего не знаю про такую планету =(')
+        _, constellation_name = ephem. \
+            constellation(planet(date.today()))
+        return 'Сегодня планета в созвездии {}'. \
+            format(constellation_name)
     else:
-        _, constellation_name = ephem.constellation(planet(date.today()))
-        bot.sendMessage(
-            update.message.chat_id,
-            text='Сегодня планета в созвездии {}'.format(constellation_name))
-
+        return 'Ничего не знаю про такую планету =('
 
 
 def talk_to_me(bot, update):
