@@ -4,13 +4,10 @@
 def main(string_one, string_two):
     if string_one == string_two:
         return 1
-    else:
-        string_one_length = len(string_one)
-        string_two_length = len(string_two)
-        if string_one_length > string_two_length:
-            return 2
-        if second_string == 'learn':
-            return 3
+    if len(string_one) > len(string_two):
+        return 2
+    if second_string == 'learn':
+        return 3
     return 0
 
 

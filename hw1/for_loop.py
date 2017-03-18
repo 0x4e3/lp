@@ -12,10 +12,10 @@ def main():
 
     for score_by_grade in school_scores:
         avg_score_by_grade[score_by_grade['school_class']] = \
-            sum(score_by_grade['scores'])/len(score_by_grade['scores'])
+            sum(score_by_grade['scores']) / len(score_by_grade['scores'])
         avg_score_for_school += \
             avg_score_by_grade[score_by_grade['school_class']]
-    avg_score_for_school /= 3
+    avg_score_for_school /= len(school_scores)
     print(avg_score_for_school, avg_score_by_grade)
 
 
