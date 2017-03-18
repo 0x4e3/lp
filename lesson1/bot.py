@@ -1,5 +1,7 @@
 # coding=utf-8
 import sys
+import re
+import operator
 from datetime import date
 from functools import wraps
 
@@ -54,6 +56,46 @@ def find_planet(bot, update, args):
         return 'Ничего не знаю про такую планету =('
 
 
+@send_reply_to_user
+def count_words(bot, update, args):
+    if not args:
+        return 'Я не могу считать пустоту!'
+    starts_with_quote = args[0].startswith('"') or args[0].startswith("'")
+    ends_with_quote = args[-1].endswith('"') or args[-1].endswith("'")
+    if not starts_with_quote or not ends_with_quote:
+        return 'Строка всегда должна быть в кавычках!'
+    return 'всего слов {:d}'.format(len(args))
+
+
+@send_reply_to_user
+def calculate(bot, update, args):
+    if not args:
+        return 'Я не могу считать пустоту!'
+    expr = args[0]
+    if not expr.endswith('='):
+        return 'Выражение должно заканчиваться знаком "="'
+    builtin_operations = {
+        '+': operator.add,
+        '-': operator.sub,
+        '*': operator.mul,
+        '/': operator.truediv}
+    expr_parced = re.findall(r'\d+|[+-/*]', expr)
+    if len(expr_parced) != 3:
+        return 'С вашим выражением не так, BTW, я знаю только ' \
+            'такие операции: "{}"'. \
+            format(', '.join(builtin_operations.keys()))
+    first_arg, operation, second_arg = expr_parced
+    try:
+        first_arg = int(first_arg)
+        second_arg = int(second_arg)
+    except ValueError:
+        return 'Я умею работать только с целыми числами :('
+    if second_arg == 0 and operation == '/':
+        return 'Еще в школе учили, на ноль делить нельзя!'
+    operation = builtin_operations.get(operation)
+    return '{}'.format(operation(first_arg, second_arg))
+
+
 def talk_to_me(bot, update):
     print(update.message.text)
     bot.sendMessage(update.message.chat_id, update.message.text)
@@ -75,6 +117,8 @@ def main():
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("start", greet_user))
     dp.add_handler(CommandHandler("planet", find_planet, pass_args=True))
+    dp.add_handler(CommandHandler("wordcount", count_words, pass_args=True))
+    dp.add_handler(CommandHandler("calc", calculate, pass_args=True))
     dp.add_handler(MessageHandler([Filters.text], talk_to_me))
     dp.add_error_handler(show_error)
 
